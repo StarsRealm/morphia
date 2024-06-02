@@ -1,31 +1,12 @@
 package dev.morphia.mapping;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.stream.Collectors;
-
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.lang.Nullable;
-
 import dev.morphia.EntityInterceptor;
 import dev.morphia.EntityListener;
 import dev.morphia.Key;
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.ExternalEntity;
-import dev.morphia.annotations.PostLoad;
-import dev.morphia.annotations.PostPersist;
-import dev.morphia.annotations.PreLoad;
-import dev.morphia.annotations.PrePersist;
+import dev.morphia.annotations.*;
 import dev.morphia.annotations.internal.MorphiaInternal;
 import dev.morphia.config.MorphiaConfig;
 import dev.morphia.mapping.codec.pojo.EntityModel;
@@ -34,20 +15,24 @@ import dev.morphia.mapping.codec.pojo.PropertyModel;
 import dev.morphia.mapping.codec.references.MorphiaProxy;
 import dev.morphia.mapping.validation.MappingValidator;
 import dev.morphia.sofia.Sofia;
-
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.github.classgraph.ClassGraph;
-import io.github.classgraph.ClassInfo;
-import io.github.classgraph.ScanResult;
+import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.stream.Collectors;
 
 /**
  * @morphia.internal
  */
 @MorphiaInternal
-@SuppressWarnings({ "unchecked", "rawtypes", "removal" })
+@SuppressWarnings({"unchecked", "rawtypes", "removal"})
 public class Mapper {
     private static final Logger LOG = LoggerFactory.getLogger(Mapper.class);
 
@@ -89,14 +74,14 @@ public class Mapper {
     @MorphiaInternal
     public Mapper(MorphiaConfig config) {
         this.config = config;
-        discriminatorLookup = new DiscriminatorLookup();
         this.classLoader = this.getClass().getClassLoader();
+        discriminatorLookup = new DiscriminatorLookup(this.classLoader);
     }
 
     public Mapper(MorphiaConfig config, ClassLoader classLoader) {
         this.config = config;
-        discriminatorLookup = new DiscriminatorLookup();
         this.classLoader = classLoader;
+        discriminatorLookup = new DiscriminatorLookup(this.classLoader);
     }
 
     /**
@@ -105,10 +90,10 @@ public class Mapper {
      */
     public Mapper(Mapper other) {
         config = other.config;
-        discriminatorLookup = new DiscriminatorLookup();
+        this.classLoader = other.classLoader;
+        discriminatorLookup = new DiscriminatorLookup(this.classLoader);
         other.mappedEntities.values().forEach(entity -> clone(entity));
         listeners.addAll(other.listeners);
-        this.classLoader = other.classLoader;
     }
 
     @Nullable
@@ -629,8 +614,8 @@ public class Mapper {
 
         return clazz.getSuperclass() != null && hasAnnotation(clazz.getSuperclass(), annotations)
                 || Arrays.stream(clazz.getInterfaces())
-                        .map(i -> hasAnnotation(i, annotations))
-                        .reduce(false, (l, r) -> l || r);
+                .map(i -> hasAnnotation(i, annotations))
+                .reduce(false, (l, r) -> l || r);
     }
 
 }

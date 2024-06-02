@@ -16,18 +16,16 @@
 
 package dev.morphia.mapping;
 
+import com.mongodb.lang.Nullable;
+import dev.morphia.annotations.internal.MorphiaInternal;
+import dev.morphia.mapping.codec.pojo.EntityModel;
+import dev.morphia.sofia.Sofia;
+import org.bson.codecs.configuration.CodecConfigurationException;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import com.mongodb.lang.Nullable;
-
-import dev.morphia.annotations.internal.MorphiaInternal;
-import dev.morphia.mapping.codec.pojo.EntityModel;
-import dev.morphia.sofia.Sofia;
-
-import org.bson.codecs.configuration.CodecConfigurationException;
 
 import static java.lang.String.format;
 
@@ -40,6 +38,15 @@ import static java.lang.String.format;
 public final class DiscriminatorLookup {
     private final Map<String, String> discriminatorClassMap = new ConcurrentHashMap<>();
     private final Set<String> packages = new ConcurrentSkipListSet<>();
+    private final ClassLoader classLoader;
+
+    public DiscriminatorLookup() {
+        this.classLoader = this.getClass().getClassLoader();
+    }
+
+    public DiscriminatorLookup(ClassLoader classLoader) {
+        this.classLoader = classLoader;
+    }
 
     /**
      * Adds a model to the map
@@ -64,7 +71,7 @@ public final class DiscriminatorLookup {
     public Class<?> lookup(String discriminator) {
         if (discriminatorClassMap.containsKey(discriminator)) {
             try {
-                return Class.forName(discriminatorClassMap.get(discriminator));
+                return Class.forName(discriminatorClassMap.get(discriminator), true, classLoader);
             } catch (ClassNotFoundException e) {
                 throw new MappingException(e.getMessage(), e);
             }
@@ -85,7 +92,7 @@ public final class DiscriminatorLookup {
     private Class<?> getClassForName(String discriminator) {
         Class<?> clazz = null;
         try {
-            clazz = Class.forName(discriminator);
+            clazz = Class.forName(discriminator, true, classLoader);
         } catch (ClassNotFoundException e) {
             // Ignore
         }
