@@ -9,7 +9,7 @@
 
     <groupId>dev.morphia.morphia</groupId>
     <artifactId>morphia</artifactId>
-    <version>2.4.14-SNAPSHOT</version>
+    <version>2.4.14-STARSRELAM-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>morphia</name>
@@ -45,6 +45,13 @@
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
     </properties>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>aliyun-snap</id>
+            <url>https://packages.aliyun.com/maven/repository/2421751-snapshot-i7Aufp/</url>
+        </snapshotRepository>
+    </distributionManagement>
+    
     <build>
         <defaultGoal>install</defaultGoal>
         <pluginManagement>
@@ -307,13 +314,24 @@
                 <module>audits</module>
             </modules>
         </profile>
+        <profile>
+            <id>skipTest</id>
+            <activation>
+                <property>
+                    <name>skipTest</name>
+                </property>
+            </activation>
+            <properties>
+                <skipTests>true</skipTests>
+            </properties>
+        </profile>
     </profiles>
 
     <modules>
         <module>build-plugins</module>
         <module>util</module>
         <module>core</module>
-        <module>kotlin</module>
+<!--        <module>kotlin</module>-->
         <module>validation</module>
         <module>examples</module>
     </modules>

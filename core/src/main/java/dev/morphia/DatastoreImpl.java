@@ -131,6 +131,33 @@ public class DatastoreImpl implements AdvancedDatastore {
         }
     }
 
+    public DatastoreImpl(MongoClient client, MorphiaConfig config, ClassLoader mapperClassLoader) {
+        this.mongoClient = client;
+        this.database = mongoClient.getDatabase(config.database());
+        this.mapper = new Mapper(config);
+        this.queryFactory = mapper.getConfig().queryFactory();
+        importModels();
+
+        codecRegistry = buildRegistry();
+
+        this.database = database.withCodecRegistry(this.codecRegistry);
+        operations = new CollectionOperations();
+
+        config.packages().forEach(packageName -> {
+            Sofia.logMappingPackage(packageName);
+            mapper.map(packageName);
+        });
+        if (config.applyCaps()) {
+            applyCaps();
+        }
+        if (config.applyIndexes()) {
+            applyIndexes();
+        }
+        if (config.applyDocumentValidations()) {
+            applyDocumentValidations();
+        }
+    }
+
     /**
      * Copy constructor for a datastore
      *

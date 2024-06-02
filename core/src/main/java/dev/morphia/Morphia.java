@@ -89,4 +89,8 @@ public final class Morphia {
         return new DatastoreImpl(mongoClient, config);
     }
 
+    public static Datastore createDatastore(MongoClient mongoClient, MorphiaConfig config, ClassLoader mapperClassLoader) {
+        return new DatastoreImpl(mongoClient, config, mapperClassLoader);
+    }
+
 }

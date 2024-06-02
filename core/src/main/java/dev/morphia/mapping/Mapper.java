@@ -77,6 +77,7 @@ public class Mapper {
     private final List<EntityListener<?>> listeners = new ArrayList<>();
     private final MorphiaConfig config;
     private final DiscriminatorLookup discriminatorLookup;
+    private final ClassLoader classLoader;
 
     /**
      * Creates a Mapper with the given options.
@@ -89,10 +90,16 @@ public class Mapper {
     public Mapper(MorphiaConfig config) {
         this.config = config;
         discriminatorLookup = new DiscriminatorLookup();
+        this.classLoader = this.getClass().getClassLoader();
+    }
+
+    public Mapper(MorphiaConfig config, ClassLoader classLoader) {
+        this.config = config;
+        discriminatorLookup = new DiscriminatorLookup();
+        this.classLoader = classLoader;
     }
 
     /**
-     *
      * @param other the original
      * @hidden
      */
@@ -101,6 +108,7 @@ public class Mapper {
         discriminatorLookup = new DiscriminatorLookup();
         other.mappedEntities.values().forEach(entity -> clone(entity));
         listeners.addAll(other.listeners);
+        this.classLoader = other.classLoader;
     }
 
     @Nullable
@@ -421,8 +429,8 @@ public class Mapper {
      *
      * @param entityClasses the classes to map
      * @return the EntityModel references
-     * @deprecated This is handled via the config file and should not be called manually
      * @hidden
+     * @deprecated This is handled via the config file and should not be called manually
      */
     @Deprecated(since = "2.4.0", forRemoval = true)
     public List<EntityModel> map(Class... entityClasses) {
@@ -432,9 +440,9 @@ public class Mapper {
     /**
      * Maps a set of classes
      *
-     * @hidden
      * @param classes the classes to map
      * @return the list of mapped classes
+     * @hidden
      * @deprecated This is handled via the config file and should not be called manually
      */
     @Deprecated(since = "2.4.0", forRemoval = true)
@@ -455,9 +463,9 @@ public class Mapper {
      * Tries to map all classes in the package specified.
      *
      * @param packageName the name of the package to process
-     * @deprecated This is handled via the config file and should not be called manually
      * @hidden
      * @since 2.4
+     * @deprecated This is handled via the config file and should not be called manually
      */
     @Deprecated(since = "2.4.0", forRemoval = true)
     public synchronized void map(String packageName) {
@@ -477,8 +485,8 @@ public class Mapper {
     /**
      * Tries to map all classes in the package specified.
      *
-     * @hidden
      * @param packageName the name of the package to process
+     * @hidden
      * @deprecated This is handled via the config file and should not be called manually
      */
     @Deprecated(since = "2.4.0", forRemoval = true)
@@ -500,8 +508,8 @@ public class Mapper {
     /**
      * Maps all the classes found in the package to which the given class belongs.
      *
-     * @hidden
      * @param clazz the class to use when trying to find others to map
+     * @hidden
      * @deprecated This is handled via the config file and should not be called manually
      */
     @Deprecated(since = "2.4.0", forRemoval = true)
@@ -604,7 +612,7 @@ public class Mapper {
         try (ScanResult scanResult = classGraph.scan()) {
             for (ClassInfo classInfo : scanResult.getAllClasses()) {
                 try {
-                    classes.add(Class.forName(classInfo.getName()));
+                    classes.add(Class.forName(classInfo.getName(), true, classLoader));
                 } catch (Throwable ignored) {
                 }
             }
