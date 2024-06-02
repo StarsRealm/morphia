@@ -1,20 +1,6 @@
 package dev.morphia;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ServiceLoader;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoCommandException;
-import com.mongodb.MongoException;
-import com.mongodb.MongoWriteException;
-import com.mongodb.WriteConcern;
+import com.mongodb.*;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -27,15 +13,10 @@ import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.lang.NonNull;
 import com.mongodb.lang.Nullable;
-
 import dev.morphia.aggregation.Aggregation;
 import dev.morphia.aggregation.AggregationImpl;
 import dev.morphia.aggregation.codecs.AggregationCodecProvider;
-import dev.morphia.annotations.CappedAt;
-import dev.morphia.annotations.Entity;
-import dev.morphia.annotations.ShardKeys;
-import dev.morphia.annotations.ShardOptions;
-import dev.morphia.annotations.Validation;
+import dev.morphia.annotations.*;
 import dev.morphia.annotations.internal.IndexHelper;
 import dev.morphia.annotations.internal.MorphiaInternal;
 import dev.morphia.config.MorphiaConfig;
@@ -57,17 +38,10 @@ import dev.morphia.mapping.codec.pojo.MorphiaCodec;
 import dev.morphia.mapping.codec.pojo.PropertyModel;
 import dev.morphia.mapping.codec.reader.DocumentReader;
 import dev.morphia.mapping.codec.writer.DocumentWriter;
-import dev.morphia.query.CountOptions;
-import dev.morphia.query.FindAndDeleteOptions;
-import dev.morphia.query.FindOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.QueryFactory;
-import dev.morphia.query.Update;
-import dev.morphia.query.UpdateException;
+import dev.morphia.query.*;
 import dev.morphia.sofia.Sofia;
 import dev.morphia.transactions.MorphiaSessionImpl;
 import dev.morphia.transactions.MorphiaTransaction;
-
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
@@ -75,6 +49,12 @@ import org.bson.codecs.configuration.CodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.annotation.Annotation;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static dev.morphia.query.filters.Filters.eq;
 import static dev.morphia.query.updates.UpdateOperators.set;
@@ -134,7 +114,7 @@ public class DatastoreImpl implements AdvancedDatastore {
     public DatastoreImpl(MongoClient client, MorphiaConfig config, ClassLoader mapperClassLoader) {
         this.mongoClient = client;
         this.database = mongoClient.getDatabase(config.database());
-        this.mapper = new Mapper(config);
+        this.mapper = new Mapper(config, mapperClassLoader);
         this.queryFactory = mapper.getConfig().queryFactory();
         importModels();
 
